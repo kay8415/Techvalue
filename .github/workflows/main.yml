@@ -54,7 +54,7 @@ jobs:
       - name: Install dependencies
         if: steps.should_run.outputs.run == 'true'
         run: |
-          cd Techvalue/${{ matrix.category.name }}
+          cd ${{ matrix.category.name }}
           pip install --upgrade pip
           pip install -r requirements.txt
       
@@ -71,7 +71,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
         run: |
-          cd Techvalue/${{ matrix.category.name }}
+          cd ${{ matrix.category.name }}
           python scraper.py
       
       - name: Upload artifacts (backup)
@@ -80,11 +80,11 @@ jobs:
         with:
           name: ${{ matrix.category.name }}-results
           path: |
-            Techvalue/${{ matrix.category.name }}/data/*.xlsx
-            Techvalue/${{ matrix.category.name }}/data/images/*.jpg
-            Techvalue/${{ matrix.category.name }}/data/images/*.png
-            Techvalue/${{ matrix.category.name }}/data/images/*.gif
-            Techvalue/${{ matrix.category.name }}/data/images/*.webp
+            ${{ matrix.category.name }}/data/*.xlsx
+            ${{ matrix.category.name }}/data/images/*.jpg
+            ${{ matrix.category.name }}/data/images/*.png
+            ${{ matrix.category.name }}/data/images/*.gif
+            ${{ matrix.category.name }}/data/images/*.webp
           retention-days: 7
       
       - name: Notify on failure
