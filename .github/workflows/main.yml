@@ -15,6 +15,7 @@ on:
         options:
           - all
           - electronics
+          - mobile_e_cards
 
 jobs:
   scrape:
@@ -26,6 +27,8 @@ jobs:
         category:
           - name: electronics
             display_name: Electronics
+          - name: mobile_e_cards
+            display_name: Mobile & E-Cards
     
     name: Scrape ${{ matrix.category.display_name }}
     
