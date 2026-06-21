@@ -80,6 +80,19 @@ class MobileECardsScraper:
         self.local_images_dir = self.local_data_dir / "images"
         self.local_data_dir.mkdir(exist_ok=True)
         self.local_images_dir.mkdir(exist_ok=True)
+
+    async def _goto(self, page, url, timeout=60000, retries=3):
+        """Navigate to a URL. Uses domcontentloaded because networkidle rarely settles on sheeel.com."""
+        last_error = None
+        for attempt in range(1, retries + 1):
+            try:
+                return await page.goto(url, wait_until='domcontentloaded', timeout=timeout)
+            except Exception as e:
+                last_error = e
+                if attempt < retries:
+                    print(f"  ⚠ Navigation attempt {attempt}/{retries} failed, retrying in 2s...")
+                    await asyncio.sleep(2)
+        raise last_error
     
     async def get_subcategories(self, page):
         """Extract all subcategory links from the main category page"""
@@ -178,7 +191,7 @@ class MobileECardsScraper:
         """Visit product detail page and extract all available fields"""
         try:
             detail_page = await context.new_page()
-            response = await detail_page.goto(product_url, wait_until='networkidle', timeout=30000)
+            response = await self._goto(detail_page, product_url)
             if response and response.status == 404:
                 print(f"       ⚠ Skipping (404 Not Found): {product_url}")
                 await detail_page.close()
@@ -323,7 +336,7 @@ class MobileECardsScraper:
             try:
                 # Load first page
                 print("📡 Loading first page...")
-                response = await page.goto(subcategory['url'], wait_until='networkidle', timeout=30000)
+                response = await self._goto(page, subcategory['url'])
                 if response and response.status == 404:
                     print(f"⚠ Subcategory '{subcategory['name']}' returned 404 - URL may have changed. Skipping.")
                     await page.close()
@@ -347,7 +360,7 @@ class MobileECardsScraper:
                         # Navigate to next page
                         next_url = f"{subcategory['url']}?p={page_num}"
                         print(f"📡 Loading page {page_num}: {next_url}")
-                        response = await page.goto(next_url, wait_until='networkidle', timeout=30000)
+                        response = await self._goto(page, next_url)
                         if response and response.status == 404:
                             print(f"  ⚠ Page {page_num} returned 404, stopping pagination")
                             break
@@ -390,11 +403,12 @@ class MobileECardsScraper:
             try:
                 # Load main page to get subcategories
                 print("📡 Loading main category page...")
-                response = await page.goto(self.base_url, wait_until='networkidle', timeout=30000)
+                response = await self._goto(page, self.base_url)
                 if response and response.status == 404:
                     print(f"❌ Main category page returned 404 - URL may have changed: {self.base_url}")
                     await page.close()
                     return
+                await page.wait_for_selector('.subcategory-link', timeout=15000)
                 print(f"✓ Page loaded: {await page.title()}\n")
                 
                 # Get subcategories
