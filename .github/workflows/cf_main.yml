@@ -3,7 +3,7 @@ name: Cloudflare R2 workflow pipeline
 on:
   schedule:
     # Run every 2 days at 3:00 AM UTC
-    - cron: '0 3 */2 * *'
+    - cron: '16 2 */2 * *'
   
   workflow_dispatch:  # Allow manual trigger with category selection
     inputs:
